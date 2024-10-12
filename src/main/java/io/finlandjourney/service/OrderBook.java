@@ -1,6 +1,8 @@
-package io.finlandjourney;
+package io.finlandjourney.service;
 
 import java.util.List;
+
+import io.finlandjourney.model.*;
 
 public interface OrderBook {
 

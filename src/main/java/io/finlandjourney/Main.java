@@ -2,6 +2,9 @@ package io.finlandjourney;
 
 import java.time.*;
 
+import io.finlandjourney.model.*;
+import io.finlandjourney.service.*;
+
 public class Main {
     public static void main(String[] args) {
         OrderBook orderBook = new OrderBookImpl();

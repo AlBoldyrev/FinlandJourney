@@ -1,7 +1,9 @@
-package io.finlandjourney;
+package io.finlandjourney.service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+
+import io.finlandjourney.model.*;
 import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

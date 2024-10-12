@@ -1,5 +1,7 @@
 package io.finlandjourney;
 
+import io.finlandjourney.model.*;
+import io.finlandjourney.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

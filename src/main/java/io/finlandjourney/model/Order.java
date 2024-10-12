@@ -1,4 +1,4 @@
-package io.finlandjourney;
+package io.finlandjourney.model;
 
 import java.time.*;
 
