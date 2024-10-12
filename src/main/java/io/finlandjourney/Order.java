@@ -12,5 +12,6 @@ public class Order {
     private int quantity;
     private int price;
     private OrderType orderType;
+    private LocalDateTime creationTime;
 }
 

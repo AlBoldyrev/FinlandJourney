@@ -1,39 +1,42 @@
 package io.finlandjourney;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import lombok.*;
 
 @Data
 public class OrderBook {
 
-    TreeMap<Integer, List<Order>> buyOrders = new TreeMap<>(Comparator.reverseOrder());
-    TreeMap<Integer, List<Order>> sellOrders = new TreeMap<>();
+    TreeMap<OrderKey, List<Order>> buyOrders = new TreeMap<>(Comparator.reverseOrder());
+    TreeMap<OrderKey, List<Order>> sellOrders = new TreeMap<>();
 
     public Order addOrder(Order order) {
+        LocalDateTime creationTime = order.getCreationTime();
+        OrderKey orderKey = new OrderKey(order.getPrice(), creationTime);
+
         if (order.getOrderType().equals(OrderType.BUY)) {
-            processOrder(order, sellOrders, buyOrders, true);
+            processOrder(order, sellOrders, buyOrders, orderKey, true);
         } else if (order.getOrderType().equals(OrderType.SELL)) {
-            processOrder(order, buyOrders, sellOrders, false);
+            processOrder(order, buyOrders, sellOrders, orderKey, false);
         }
         return order;
     }
 
-    private void processOrder(Order order, TreeMap<Integer, List<Order>> opposingOrders,
-                              TreeMap<Integer, List<Order>> ownOrders, boolean isBuyOrder) {
-        int price = order.getPrice();
+    private void processOrder(Order order, TreeMap<OrderKey, List<Order>> opposingOrders,
+                              TreeMap<OrderKey, List<Order>> ownOrders, OrderKey orderKey, boolean isBuyOrder) {
         int quantity = order.getQuantity();
         StringBuilder logMessage = new StringBuilder();
 
         if (!opposingOrders.isEmpty()) {
-            Iterator<Map.Entry<Integer, List<Order>>> iterator = opposingOrders.entrySet().iterator();
+            Iterator<Map.Entry<OrderKey, List<Order>>> iterator = opposingOrders.entrySet().iterator();
             List<String> processedOrders = new ArrayList<>();
 
             while (iterator.hasNext() && quantity > 0) {
-                Map.Entry<Integer, List<Order>> entry = iterator.next();
-                int opposingPrice = entry.getKey();
+                Map.Entry<OrderKey, List<Order>> entry = iterator.next();
+                int opposingPrice = entry.getKey().getPrice();
                 List<Order> opposingOrderList = entry.getValue();
 
-                if ((isBuyOrder && opposingPrice <= price) || (!isBuyOrder && opposingPrice >= price)) {
+                if ((isBuyOrder && opposingPrice <= order.getPrice()) || (!isBuyOrder && opposingPrice >= order.getPrice())) {
                     for (Iterator<Order> opposingIterator = opposingOrderList.iterator(); opposingIterator.hasNext() && quantity > 0;) {
                         Order opposingOrder = opposingIterator.next();
                         int opposingQuantity = opposingOrder.getQuantity();
@@ -42,9 +45,11 @@ public class OrderBook {
                         if (opposingQuantity > quantity) {
                             quantityProcessed = quantity;
                             opposingOrder.setQuantity(opposingQuantity - quantity);
+
                             logMessage.append("Updated ").append(isBuyOrder ? "SELL" : "BUY")
                                     .append(" order with id = '").append(opposingOrder.getOrderId())
                                     .append("'.  Remaining quantity = ").append(opposingOrder.getQuantity()).append(". ");
+
                             quantity = 0;
                         } else if (opposingQuantity == quantity) {
                             quantityProcessed = quantity;
@@ -70,17 +75,17 @@ public class OrderBook {
             if (isBuyOrder && quantity == 0) {
                 logMessage.insert(0, "Completed BUY order with id = '" + order.getOrderId() + "'. ");
                 logMessage.append(String.join(", ", processedOrders)).append(".");
-                System.out.println(logMessage.toString());
+                System.out.println(logMessage);
             } else if (!isBuyOrder && quantity == 0) {
                 logMessage.insert(0, "Completed SELL order with id = '" + order.getOrderId() + "'. ");
                 logMessage.append(String.join(", ", processedOrders)).append(".");
-                System.out.println(logMessage.toString());
+                System.out.println(logMessage);
             }
         }
 
         if (quantity > 0) {
             order.setQuantity(quantity);
-            ownOrders.computeIfAbsent(order.getPrice(), k -> new ArrayList<>()).add(order);
+            ownOrders.computeIfAbsent(orderKey, k -> new ArrayList<>()).add(order);
             System.out.println((isBuyOrder ? "BUY" : "SELL") + " order with id = '" + order.getOrderId() + "' added to book with remaining quantity " + order.getQuantity() + ".");
         }
     }
