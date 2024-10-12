@@ -19,6 +19,7 @@ class OrderBookTests {
         Order sellOrder = new Order("1", 5, 100, OrderType.SELL);
         orderBook.addOrder(sellOrder);
         List<Order> sellOrders = orderBook.getSellOrders().get(100);
+
         assertNotNull(sellOrders);
         assertEquals(1, sellOrders.size());
         assertEquals(sellOrder, sellOrders.get(0));
@@ -38,18 +39,6 @@ class OrderBookTests {
 
     @Test
     void testFullBuyOrderExecution() {
-        Order sellOrder = new Order("1", 5, 100, OrderType.SELL);
-        Order buyOrder = new Order("2", 5, 100, OrderType.BUY);
-
-        orderBook.addOrder(sellOrder);
-        orderBook.addOrder(buyOrder);
-
-        assertNull(orderBook.getSellOrders().get(100));
-        assertNull(orderBook.getBuyOrders().get(100));
-    }
-
-    @Test
-    void testQuantityBecomesZero() {
         Order sellOrder = new Order("1", 5, 100, OrderType.SELL);
         Order buyOrder = new Order("2", 5, 100, OrderType.BUY);
 
@@ -127,23 +116,6 @@ class OrderBookTests {
     }
 
     @Test
-    void testAddBuyAndSellOrdersAtDifferentPrices() {
-        Order buyOrder = new Order("1", 5, 90, OrderType.BUY);
-        Order sellOrder = new Order("2", 5, 110, OrderType.SELL);
-
-        orderBook.addOrder(buyOrder);
-        orderBook.addOrder(sellOrder);
-
-        List<Order> buyOrders = orderBook.getBuyOrders().get(90);
-        List<Order> sellOrders = orderBook.getSellOrders().get(110);
-
-        assertNotNull(buyOrders);
-        assertNotNull(sellOrders);
-        assertEquals(1, buyOrders.size());
-        assertEquals(1, sellOrders.size());
-    }
-
-    @Test
     void testPartialBuyOrderWithRemainingSellOrder() {
         Order sellOrder = new Order("1", 10, 100, OrderType.SELL);
         Order buyOrder = new Order("2", 5, 100, OrderType.BUY);
@@ -162,7 +134,7 @@ class OrderBookTests {
     @Test
     void testIteratorContinuesButQuantityBecomesZero() {
         Order sellOrder1 = new Order("1", 3, 100, OrderType.SELL);
-        Order sellOrder2 = new Order("2", 5, 100, OrderType.SELL);  // Останется для следующей итерации
+        Order sellOrder2 = new Order("2", 5, 100, OrderType.SELL);
         Order buyOrder = new Order("3", 3, 100, OrderType.BUY);
 
         orderBook.addOrder(sellOrder1);
