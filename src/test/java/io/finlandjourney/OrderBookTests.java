@@ -190,6 +190,32 @@ class OrderBookTests {
     }
 
     @Test
+    void testBuyOrderExecutionWithMultipleSellOrders() {
+        Order sellOrder1 = new Order("1", 3, 80, OrderType.SELL);
+        Order sellOrder2 = new Order("2", 2, 90, OrderType.SELL);
+        Order sellOrder3 = new Order("3", 5, 110, OrderType.SELL);
+        Order buyOrder = new Order("4", 6, 100, OrderType.BUY);
+
+        orderBook.addOrder(sellOrder1);
+        orderBook.addOrder(sellOrder2);
+        orderBook.addOrder(sellOrder3);
+        orderBook.addOrder(buyOrder);
+
+        List<Order> remainingSellOrders = orderBook.getSellOrders().get(110);
+        assertNotNull(remainingSellOrders);
+        assertEquals(1, remainingSellOrders.size());
+        assertEquals(5, remainingSellOrders.get(0).getQuantity());
+
+        List<Order> remainingBuyOrders = orderBook.getBuyOrders().get(100);
+        assertNotNull(remainingBuyOrders);
+        assertEquals(1, remainingBuyOrders.size());
+        assertEquals(1, remainingBuyOrders.get(0).getQuantity());
+
+        assertNull(orderBook.getSellOrders().get(80));
+        assertNull(orderBook.getSellOrders().get(90));
+    }
+
+    @Test
     void testMainMethod() {
         String[] args = {};
         Main.main(args);
