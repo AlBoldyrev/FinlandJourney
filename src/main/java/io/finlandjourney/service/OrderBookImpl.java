@@ -44,7 +44,7 @@ public class OrderBookImpl implements OrderBook {
         for (List<Order> orders : ordersMap.values()) {
             allOrders.addAll(orders);
         }
-        return Collections.unmodifiableList(allOrders); // Возвращаем немодифицируемый список
+        return Collections.unmodifiableList(allOrders);
     }
 
     private void processOrder(Order order, TreeMap<OrderKey, List<Order>> opposingOrders,
