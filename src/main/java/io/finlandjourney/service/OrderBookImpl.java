@@ -2,8 +2,7 @@ package io.finlandjourney.service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import io.finlandjourney.model.*;
 import lombok.*;
@@ -15,24 +14,18 @@ public class OrderBookImpl implements OrderBook {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderBookImpl.class);
 
-    private final TreeMap<OrderKey, List<Order>> buyOrders = new TreeMap<>(Comparator.reverseOrder());
-    private final TreeMap<OrderKey, List<Order>> sellOrders = new TreeMap<>();
-    private final Lock lock = new ReentrantLock();
+    private final ConcurrentSkipListMap<OrderKey, List<Order>> buyOrders = new ConcurrentSkipListMap<>(Comparator.reverseOrder());
+    private final ConcurrentSkipListMap<OrderKey, List<Order>> sellOrders = new ConcurrentSkipListMap<>();
 
     @Override
     public Order addOrder(Order order) {
         LocalDateTime creationTime = order.getCreationTime();
         OrderKey orderKey = new OrderKey(order.getPrice(), creationTime);
 
-        lock.lock();
-        try {
-            if (order.getOrderType().equals(OrderType.BUY)) {
-                processOrder(order, sellOrders, buyOrders, orderKey, true);
-            } else if (order.getOrderType().equals(OrderType.SELL)) {
-                processOrder(order, buyOrders, sellOrders, orderKey, false);
-            }
-        } finally {
-            lock.unlock();
+        if (order.getOrderType().equals(OrderType.BUY)) {
+            processOrder(order, sellOrders, buyOrders, orderKey, true);
+        } else if (order.getOrderType().equals(OrderType.SELL)) {
+            processOrder(order, buyOrders, sellOrders, orderKey, false);
         }
 
         return order;
@@ -40,15 +33,15 @@ public class OrderBookImpl implements OrderBook {
 
     @Override
     public List<Order> getBuyOrders() {
-        return getFlattenedOrderList(new TreeMap<>(buyOrders));
+        return getFlattenedOrderList(new ConcurrentSkipListMap<>(buyOrders));
     }
 
     @Override
     public List<Order> getSellOrders() {
-        return getFlattenedOrderList(new TreeMap<>(sellOrders));
+        return getFlattenedOrderList(new ConcurrentSkipListMap<>(sellOrders));
     }
 
-    private List<Order> getFlattenedOrderList(TreeMap<OrderKey, List<Order>> ordersMap) {
+    private List<Order> getFlattenedOrderList(ConcurrentSkipListMap<OrderKey, List<Order>> ordersMap) {
         List<Order> allOrders = new ArrayList<>();
         for (List<Order> orders : ordersMap.values()) {
             allOrders.addAll(orders);
@@ -56,8 +49,8 @@ public class OrderBookImpl implements OrderBook {
         return Collections.unmodifiableList(allOrders);
     }
 
-    private void processOrder(Order order, TreeMap<OrderKey, List<Order>> opposingOrders,
-                              TreeMap<OrderKey, List<Order>> ownOrders, OrderKey orderKey, boolean isBuyOrder) {
+    private void processOrder(Order order, ConcurrentSkipListMap<OrderKey, List<Order>> opposingOrders,
+                              ConcurrentSkipListMap<OrderKey, List<Order>> ownOrders, OrderKey orderKey, boolean isBuyOrder) {
         int quantity = order.getQuantity();
 
         if (!opposingOrders.isEmpty()) {

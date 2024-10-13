@@ -4,8 +4,12 @@ import java.time.*;
 
 import io.finlandjourney.model.*;
 import io.finlandjourney.service.*;
+import org.slf4j.*;
 
 public class Main {
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) {
         OrderBook orderBook = new OrderBookImpl();
 
@@ -17,12 +21,12 @@ public class Main {
 
         Thread thread1 = new Thread(() -> {
             orderBook.addOrder(buyOrder);
-            System.out.println("Added buyOrder in Thread 1");
+            logger.info("Added buyOrder in Thread 1");
         });
 
         Thread thread2 = new Thread(() -> {
             orderBook.addOrder(sellOrder2);
-            System.out.println("Added sellOrder2 in Thread 2");
+            logger.info("Added sellOrder2 in Thread 2");
         });
 
         thread1.start();
@@ -32,10 +36,10 @@ public class Main {
             thread1.join();
             thread2.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
 
-        System.out.println("Final Buy Orders: " + orderBook.getBuyOrders());
-        System.out.println("Final Sell Orders: " + orderBook.getSellOrders());
+        logger.info("Final Buy Orders: {}", orderBook.getBuyOrders());
+        logger.info("Final Sell Orders: {}", orderBook.getSellOrders());
     }
 }
