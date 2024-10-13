@@ -2,6 +2,8 @@ package io.finlandjourney.service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.finlandjourney.model.*;
 import lombok.*;
@@ -15,17 +17,24 @@ public class OrderBookImpl implements OrderBook {
 
     private final TreeMap<OrderKey, List<Order>> buyOrders = new TreeMap<>(Comparator.reverseOrder());
     private final TreeMap<OrderKey, List<Order>> sellOrders = new TreeMap<>();
+    private final Lock lock = new ReentrantLock();
 
     @Override
     public Order addOrder(Order order) {
         LocalDateTime creationTime = order.getCreationTime();
         OrderKey orderKey = new OrderKey(order.getPrice(), creationTime);
 
-        if (order.getOrderType().equals(OrderType.BUY)) {
-            processOrder(order, sellOrders, buyOrders, orderKey, true);
-        } else if (order.getOrderType().equals(OrderType.SELL)) {
-            processOrder(order, buyOrders, sellOrders, orderKey, false);
+        lock.lock();
+        try {
+            if (order.getOrderType().equals(OrderType.BUY)) {
+                processOrder(order, sellOrders, buyOrders, orderKey, true);
+            } else if (order.getOrderType().equals(OrderType.SELL)) {
+                processOrder(order, buyOrders, sellOrders, orderKey, false);
+            }
+        } finally {
+            lock.unlock();
         }
+
         return order;
     }
 
