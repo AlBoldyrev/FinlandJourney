@@ -227,6 +227,7 @@ class OrderBookTests {
         }
         Thread.sleep(1000);
         stop.set(true);
+        Thread.sleep(1000);
         assertEquals(totalBuy.get() - totalSell.get(),
             orderBook.getBuyOrders().stream().mapToLong(ord -> (long) ord.getQuantity()).sum()
             - orderBook.getSellOrders().stream().mapToLong(ord -> (long) ord.getQuantity()).sum());
