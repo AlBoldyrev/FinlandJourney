@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class OrderBookTests {
@@ -193,6 +197,39 @@ class OrderBookTests {
 
         assertTrue(orderBook.getSellOrders().isEmpty());
         assertTrue(orderBook.getBuyOrders().isEmpty());
+    }
+
+    @Test
+    void threadSafeTest() throws InterruptedException {
+        AtomicLong sequence = new AtomicLong();
+        AtomicBoolean stop = new AtomicBoolean(false);
+        AtomicLong totalBuy = new AtomicLong();
+        AtomicLong totalSell = new AtomicLong();
+        for (int i = 0; i < 10; i++) {
+            Thread thread = new Thread(() -> {
+                Random random = new Random();
+               while (!stop.get()) {
+                   Order order = new Order(
+                       String.valueOf(sequence.incrementAndGet()),
+                       random.nextInt(500) + 50,
+                       random.nextInt(500) + 10_000,
+                       random.nextBoolean() ? OrderType.BUY : OrderType.SELL,
+                       LocalDateTime.now());
+                   if (order.getOrderType() == OrderType.BUY) {
+                       totalBuy.addAndGet(order.getQuantity());
+                   } else {
+                       totalSell.addAndGet(order.getQuantity());
+                   }
+                   orderBook.addOrder(order);
+               }
+            });
+            thread.start();
+        }
+        Thread.sleep(1000);
+        stop.set(true);
+        assertEquals(totalBuy.get() - totalSell.get(),
+            orderBook.getBuyOrders().stream().mapToLong(ord -> (long) ord.getQuantity()).sum()
+            - orderBook.getSellOrders().stream().mapToLong(ord -> (long) ord.getQuantity()).sum());
     }
 
     @Test
